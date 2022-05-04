@@ -13,30 +13,37 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Metas 
-%primarias: firstcard y ncard
+%primarias: firstcard, ncard, nncard y cardset
 
 %secundarias: ncards, cartan, proceso no encapsulado de las N cards
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 %clausuras
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Hechos
+%cardset
+cardset(Elementos, 0, C, []):- !.
+maxC(0, L, []):- !.
+
 %carta1.
 prueba(Elementos, 0, []).
-carta1(0, []).
+carta1(0, []):- !.
 aa(Elementos, 0, [],).
 %Ncartas
 
-prueba2(Elementos, 0, _, _, []).
-ncards(N, 0, J, [1]).
-cartan(Elementos, N, M, 0, []).
+prueba2(Elementos, 0, _, _, []):- !.
+ncards(N, 0, J, [1]):- !.
+cartan(Elementos, N, M, 0, []):- !.
 
 %NNcartas.
-prueba3(Elementos, 0, _, _, _,_, []).
-firstnncard(Elementos, N, I, J, 0, [I]).
-secondnncard(Elementos, N, I, 0, K, []).
-totalnncard(Elementos, N, 0, J, K, []).
+prueba3(Elementos, 0, _, _, _,_, []):- !.
+firstnncard(Elementos, N, I, J, 0, [I]):- !.
+secondnncard(Elementos, N, I, 0, K, []):- !.
+totalnncard(Elementos, N, 0, J, K, []):- !.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Reglas
+%para cardset
+cardset(Elementos, N, C, L):- aa(Elementos, N, E), nncard(Elementos, N, A), ncard(Elementos, N, B), append(A,B,X), append(X, E, K), maxC(C, K, L).
+maxC(C, [L|Ls], [L|Xs]):- T is C-1, maxC(T, Ls, Xs).
 
 %para la primera carta
 prueba(Elementos, N, L):- carta1(N, X), get2(X, Elementos, L).
