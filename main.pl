@@ -21,8 +21,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Hechos
 %cardset
-cardset(Elementos, 0, C, []):- !.
-maxC(0, L, []):- !.
+mazo(Elementos, 0, C, []):- !.
+maxC(0, _, []):- !.
 
 %carta1.
 prueba(Elementos, 0, []).
@@ -42,7 +42,8 @@ totalnncard(Elementos, N, 0, J, K, []):- !.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Reglas
 %para cardset
-cardset(Elementos, N, C, L):- aa(Elementos, N, E), nncard(Elementos, N, A), ncard(Elementos, N, B), append(A,B,X), append(X, E, K), maxC(C, K, L).
+cardset(Elementos, N, C, [Elementos|L]):- mazo(Elementos, N, C, L).
+mazo(Elementos, N, C, L):- aa(Elementos, N, E), nncard(Elementos, N, A), ncard(Elementos, N, B), append(A,B,X), append(X, E, K), maxC(C, K, L).
 maxC(C, [L|Ls], [L|Xs]):- T is C-1, maxC(T, Ls, Xs).
 
 %para la primera carta
@@ -67,14 +68,47 @@ firstnncard(N, I, J, K, A, [X|L]):- E is I+1,T is K -1, X is ((N-1)+2+((N-1)*(K-
 secondnncard(Elementos, N, I, J, K, [X|L]):- R is J-1, prueba3(Elementos, N, I, J, K, N, X), secondnncard(Elementos, N, I, R, K,L).
 
 totalnncard(Elementos, N, I, J, K, [Y|Yes]):-  R is I-1, secondnncard(Elementos, N, I, J, K, Y), totalnncard(Elementos, N, R, J, K, Yes).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+cardsSetIsDobble([L|Ls]):- not(serepite(L)), yapo(Ls, Ls).  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cardsSetNthCard([L, L2|Ls], 0, L2):- !.
+cardsSetNthCard([_|Xs], C, Sol):- cardsSetIsDobble([L,L2|Ls]), T is C-1, cardsSetNthCard(Xs, T, Sol).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cardsSetFindTotalCards([], 0):- !.
+cardsSetFindTotalCards(L, R):- cardsSetIsDobble(L), length(L, X), R is (X-1)* (X-1) + (X-1) + 1.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cardsSetMissingCards([L, L2|Ls], R):- cardsSetIsDobble([L,L2|Ls]), length(L2, X), S is (X-1)* (X-1) + (X-1) + 1, cardset(L, X, S, T), subtract(T, [L,L2|Ls], R). 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cardsSetToString([], []).
+cardsSetToString([L|Ls], [R|Rs]):- atomics_to_string(L, ' ', X), string_concat("carta: ", X, R), cardsSetToString(Ls, Rs).
 
 %%%%%%%%%%%%%%%%%%%%%funciones auxiliares%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+serepite(L):- set(L, E), length(E, X), length(L, Y), X < Y. 
+
+primero([L|Ls], L).
+
+encomun(L1, L2):- intersection(L1,L2, X), length(X, 1).
+
+yapo([], _):- !.
+yapo([L1|Ls], T):- length(T, 1), yapo(Ls, Ls), !.
+yapo([L1|Ls], [X|Xs]):- primero(Xs, E), encomun(L1, E), yapo([L1|Ls], Xs).
+
+
+
 getElem(1,[C|_],C):-!.
 getElem(X,[_|R],Sol):-X1 is X -1,getElem(X1,R,Sol).
-% get2(Cartas, Elementos, Resultado).
-
 
 get2([], _, []).
 get2([C|Cs], [E|Es], [R|Res]):- getElem(C, [E|Es], R), get2(Cs, [E|Es], Res).
+
+set([], []).
+set([H|T], [H|T1]):- subtract(T, [H], T2), set(T2, T1).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
