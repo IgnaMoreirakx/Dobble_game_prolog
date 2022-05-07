@@ -90,6 +90,61 @@ cardsSetMissingCards([L, L2|Ls], R):- cardsSetIsDobble([L,L2|Ls]), length(L2, X)
 cardsSetToString([], []).
 cardsSetToString([L|Ls], [R|Rs]):- atomics_to_string(L, ' ', X), string_concat("carta: ", X, R), cardsSetToString(Ls, Rs).
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     TDA GAME  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+dobbleGame(N, CardsSet, Mode, Estado, [[], N, CardsSet, [], Mode, Estado]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%register%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+agregar(E, L1, [E|L1]).
+
+jugador(Nombre, [Nombre, 0]).
+
+onescore([Nombre, Score], [Nombre, Score2]):- Score2 is Score +1. 
+cambiarscoretotal([L1|Ls], R):- onescore(L1, L), append([L], Ls, R). 
+
+
+register(Nombre, Game, Game2):- primero(Game, Lj), not(member(Nombre, Lj)), agregar(Nombre, Lj, Ju), getElem(2, Game, Num), Num>0, getElem(3, Game, Mazo),getElem(5, Game, Modo), getElem(6, Game, Estado), T is Num-1, dobbleGame(T, Mazo, Modo, Estado, [Ga|Gas]), append([Ju], Gas, Game2).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+turno(Game, Jugador):- primero(Game, L), primero(L, R), primero(R, Jugador).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    P L A Y  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cambiarturno(Lista, R):- deletehead(Lista, R1), primero(Lista, P), addend(P, R1, R), !.
+
+agregarcarta(0, Mazo, []):- !.
+agregarcarta(N, [M| Ms], [M1| Rs]):- primero(Ms, M1), T is N-1, agregarcarta(T, Ms, Rs).
+eliminarcartas([M,M1,M2|Ms], R):- append([M], Ms, R).
+
+%para el null
+play([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], "null", [Jugadores, Numjugadores, Mazo2, Area2, Modo, Estado]):- agregarcarta(2, Mazo, Area2), eliminarcartas(Mazo, Mazo2), !.
+
+%para el spotit
+compararspot(Elemento, [C1,C2]):- member(Elemento, C1), member(Elemento, C2), !.
+
+playy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo2, Area2, Modo, Estado]):- compararspot(Elemento, Area), cambiarscoretotal(Jugadores, X), cambiarturno(X, Jugadores2), 
+eliminarcartas(Mazo, Mazo2), agregarcarta(2, Mazo, Area2), !.
+playy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- not(compararspot(Elemento, Area)), cambiarturno(Jugadores, Jugadores2).
+
+playyy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], pass, [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- cambiarturno(Jugadores, Jugadores2), !.
+
+
+
+
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%funciones auxiliares%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 serepite(L):- set(L, E), length(E, X), length(L, Y), X < Y. 
 
@@ -111,4 +166,17 @@ get2([C|Cs], [E|Es], [R|Res]):- getElem(C, [E|Es], R), get2(Cs, [E|Es], Res).
 
 set([], []).
 set([H|T], [H|T1]):- subtract(T, [H], T2), set(T2, T1).
+
+/*agregar en la cabeza*/
+addhead(X, L, [X|L]).
+
+/* borrar la cabeza de una lista*/
+deletehead(L,L1):-
+addhead(_,L1,L).
+
+/* adicionar al final de una lista */
+addend(X, [], [X]).
+addend(X, [C|R], [C|R1]):-
+addend(X, R, R1).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
