@@ -43,7 +43,7 @@ totalnncard(Elementos, N, 0, J, K, []):- !.
 %Reglas
 %para cardset
 cardset(Elementos, N, C, [Elementos|L]):- mazo(Elementos, N, C, L).
-mazo(Elementos, N, C, L):- aa(Elementos, N, E), nncard(Elementos, N, A), ncard(Elementos, N, B), append(A,B,X), append(X, E, K), maxC(C, K, L).
+mazo(Elementos, N, C, L):- aa(Elementos, N, E), nncard(Elementos, N, A), ncard(Elementos, N, B), append(A,B,X), append(X, E, K), primero(K, S), length(S, S1), (integer(C)-> C is C; C is ((S1-1)*(S1-1) + (S1-1) + 1)), maxC(C, K, L).
 maxC(C, [L|Ls], [L|Xs]):- T is C-1, maxC(T, Ls, Xs).
 
 %para la primera carta
@@ -70,7 +70,7 @@ secondnncard(Elementos, N, I, J, K, [X|L]):- R is J-1, prueba3(Elementos, N, I, 
 totalnncard(Elementos, N, I, J, K, [Y|Yes]):-  R is I-1, secondnncard(Elementos, N, I, J, K, Y), totalnncard(Elementos, N, R, J, K, Yes).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cardsSetIsDobble([L|Ls]):- not(serepite(L)), yapo(Ls, Ls).  
+cardsSetIsDobble([L|Ls]):- primero(Ls, X), length(X, T), Num is T-1, primo(Num), not(serepite(L)), yapo(Ls, Ls).  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -88,7 +88,7 @@ cardsSetMissingCards([L, L2|Ls], R):- cardsSetIsDobble([L,L2|Ls]), length(L2, X)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cardsSetToString([], []).
-cardsSetToString([L|Ls], [R|Rs]):- atomics_to_string(L, ' ', X), string_concat("carta: ", X, R), cardsSetToString(Ls, Rs).
+cardsSetToString([L|Ls], [R|Rs]):- atomics_to_string(L, ' ', X), string_concat("\n carta: ", X, R), cardsSetToString(Ls, Rs).
 
 
 
@@ -126,16 +126,38 @@ agregarcarta(N, [M| Ms], [M1| Rs]):- primero(Ms, M1), T is N-1, agregarcarta(T, 
 eliminarcartas([M,M1,M2|Ms], R):- append([M], Ms, R).
 
 %para el null
-play([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], "null", [Jugadores, Numjugadores, Mazo2, Area2, Modo, Estado]):- agregarcarta(2, Mazo, Area2), eliminarcartas(Mazo, Mazo2), !.
+play1([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], "null", [Jugadores, Numjugadores, Mazo2, Area2, Modo, Estado]):- agregarcarta(2, Mazo, Area2), eliminarcartas(Mazo, Mazo2), !.
 
 %para el spotit
 compararspot(Elemento, [C1,C2]):- member(Elemento, C1), member(Elemento, C2), !.
 
-playy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo2, Area2, Modo, Estado]):- compararspot(Elemento, Area), cambiarscoretotal(Jugadores, X), cambiarturno(X, Jugadores2), 
+play2([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo2, Area2, Modo, Estado]):- compararspot(Elemento, Area), cambiarscoretotal(Jugadores, X), cambiarturno(X, Jugadores2), 
 eliminarcartas(Mazo, Mazo2), agregarcarta(2, Mazo, Area2), !.
-playy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- not(compararspot(Elemento, Area)), cambiarturno(Jugadores, Jugadores2).
+play2([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- not(compararspot(Elemento, Area)), cambiarturno(Jugadores, Jugadores2).
 
-playyy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], pass, [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- cambiarturno(Jugadores, Jugadores2), !.
+play3([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], pass, [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- cambiarturno(Jugadores, Jugadores2), !.
+
+play4([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], finish, [Jugadores, Numjugadores, Mazo, Area, Modo, finalizado, R]):- scoresjugadores(Jugadores, R1), maxScore(R1, R2), ganador(Jugadores, R2, R3), primero(R3, R).
+ganador([L|Ls], Score, G):- mymember(Score, L, G), !.
+ganador([_|Ls], Score, G):- ganador(Ls, Score, G).  
+
+play(Game, "null", G2):- play1(Game, "null", G2),!.
+play(Game, ["spoit" , Jugador, Elemento], G2):- play2(Game, ["spoit", Jugador, Elemento], G2), !.
+play(Game, pass, G2):- play3(Game, pass, G2), !.
+play(Game, finish, G2):- play4(Game, finish, G2), !.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%estadodeljuego%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+status(Game, Estado):- getElem(6, Game, Estado).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%scoreunjugador%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+scoresjugadores([], []).
+scoresjugadores([Jugador|Js], [L|Ls]):- getElem(2, Jugador, L), scoresjugadores(Js, Ls). 
+maxScore(L, X):- mayor(L, X).
+
+
+getScore(Game, Jugador, Resultado):- primero(Game, Jugadores), jugador(Jugador, J1), obtener(J1, Jugadores, L), getElem(2, L, Resultado). 
+
 
 
 
@@ -146,6 +168,11 @@ playyy([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], pass, [Jugadores2, N
 
 
 %%%%%%%%%%%%%%%%%%%%%funciones auxiliares%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+myRandom(Xn, Xn1):-
+AX is 1103515245 * Xn,
+AXC is AX + 12345,
+Xn1 is (AXC mod 2147483647).
+
 serepite(L):- set(L, E), length(E, X), length(L, Y), X < Y. 
 
 primero([L|Ls], L).
@@ -167,8 +194,13 @@ get2([C|Cs], [E|Es], [R|Res]):- getElem(C, [E|Es], R), get2(Cs, [E|Es], Res).
 set([], []).
 set([H|T], [H|T1]):- subtract(T, [H], T2), set(T2, T1).
 
-/*agregar en la cabeza*/
+obtener(X, [X|_], X):- !.
+obtener(X, [_|Xs], Rs):- obtener(X, Xs, Rs).
+
+
 addhead(X, L, [X|L]).
+
+
 
 /* borrar la cabeza de una lista*/
 deletehead(L,L1):-
@@ -178,5 +210,16 @@ addhead(_,L1,L).
 addend(X, [], [X]).
 addend(X, [C|R], [C|R1]):-
 addend(X, R, R1).
+
+
+mayor([C|[]],C):-!.
+mayor([C|R],C1):-mayor(R,C2),C>C2 ,C1 is C,!.
+mayor([_|R],C1):-mayor(R,C1).
+
+mymember(X, L, L):- member(X, L), !.
+
+divisible(X,Y):-N is Y*Y, N =< X, X mod Y =:= 0.
+divisible(X,Y):-Y < X,Y1 is Y+1,divisible(X,Y1).
+primo(X):-Y is 2, X > 1, \+divisible(X,Y).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
