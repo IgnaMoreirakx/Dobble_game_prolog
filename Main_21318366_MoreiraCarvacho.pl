@@ -77,7 +77,7 @@ secondnncard(Elementos, N, I, J, K, [X|L]):- R is J-1, transformar3(Elementos, N
 totalnncard(Elementos, N, I, J, K, [Y|Yes]):-  R is I-1, secondnncard(Elementos, N, I, J, K, Y), totalnncard(Elementos, N, R, J, K, Yes).
 
  %proceso para verificar si un cardSet es valido
-cardsSetIsDobble([L|Ls]):- primero(Ls, X), length(X, T), Num is T-1, primo(Num), not(serepite(L)), yapo(Ls, Ls). 
+cardsSetIsDobble([L|Ls]):- primero(Ls, X), length(X, T), Num is T-1, primo(Num), not(serepite(L)), comparar3(Ls, Ls). 
 
 cardsSetNthCard([_|Xs], C, Sol):- cardsSetIsDobble([_|Xs]), T is C-1, cardsSetNthCard(Xs, T, Sol).
 
@@ -150,37 +150,37 @@ scoresjugadores([], []).
 dobbleGame(N, CardsSet, Mode, Estado, [[], N, CardsSet, [], Mode, Estado]).
 
 %Reglas:
-register(Nombre, Game, Game2):- jugador(Nombre, J1), primero(Game, Lj), not(member(J1, Lj)), agregar(J1, Lj, Ju), getElem(2, Game, Num), Num>0, getElem(3, Game, Mazo),
+dobbleGameRegister(Nombre, Game, Game2):- jugador(Nombre, J1), primero(Game, Lj), not(member(J1, Lj)), agregar(J1, Lj, Ju), getElem(2, Game, Num), Num>0, getElem(3, Game, Mazo),
 getElem(5, Game, Modo), getElem(6, Game, Estado), T is Num-1, dobbleGame(T, Mazo, Modo, Estado, [Ga|Gas]), append([Ju], Gas, Game2).
 
 dobbleGameWhoseTurnIsIt(Game, Jugador):- primero(Game, L), primero(L, R), primero(R, Jugador).
 
 %Se crean reglas para cada acction que puede tomar el play
 %para el null
-play1([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], null, [Jugadores, Numjugadores, Mazo2, Area2, Modo, Estado]):- agregarcarta(2, Mazo, Area2), eliminarcartas(Mazo, Mazo2), !.
+dobbleGamePlay([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], null, [Jugadores, Numjugadores, Mazo2, Area2, Modo, Estado]):- agregarcarta(2, Mazo, Area2), eliminarcartas(Mazo, Mazo2), !.
 
 %para el spotit
 compararspot(Elemento, [C1,C2]):- member(Elemento, C1), member(Elemento, C2), !.
-play2([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo2, Area2, Modo, Estado]):- jugador(Jugador, J1), primero(Jugadores,J1),  compararspot(Elemento, Area), cambiarscoretotal(Jugadores, X), cambiarturno(X, Jugadores2), 
+
+compararspot2(Elemento, [C1,C2]):- not(member(Elemento, C1)), !.
+compararspot2(Elemento, [C1,C2]):- not(member(Elemento, C2)), !.
+
+dobbleGamePlay([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo2, Area2, Modo, Estado]):- dobbleGameWhoseTurnIsIt([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], Jugador), jugador(Jugador, J1), primero(Jugadores,J1),  compararspot(Elemento, Area), cambiarscoretotal(Jugadores, X), cambiarturno(X, Jugadores2), 
 eliminarcartas(Mazo, Mazo2), agregarcarta(2, Mazo, Area2), !.
-play2([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugadores, Elemento], [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- jugador(Jugador, J1), primero(Jugadores,J1), not(compararspot(Elemento, Area)), cambiarturno(Jugadores, Jugadores2).
+dobbleGamePlay([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], ["spoit", Jugador, Elemento], [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- dobbleGameWhoseTurnIsIt([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], Jugador), jugador(Jugador, J1), primero(Jugadores,J1), not(compararspot(Elemento, Area)), cambiarturno(Jugadores, Jugadores2).
 
 %para el pass
-play3([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], pass, [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- cambiarturno(Jugadores, Jugadores2), !.
+dobbleGamePlay([Jugadores, Numjugadores, Mazo, Area, Modo, Estado], pass, [Jugadores2, Numjugadores, Mazo, Area, Modo, Estado]):- cambiarturno(Jugadores, Jugadores2), !.
 
 %para el finish
-play4([Jugadores, Numjugadores, Mazo, Area, Modo, _], finish, [Jugadores, Numjugadores, Mazo, Area, Modo, finalizado, R]):- scoresjugadores(Jugadores, R1), maxScore(R1, R2), ganador(Jugadores, R2, R3), primero(R3, R).
-scoresjugadores([Jugador|Js], [L|Ls]):- getElem(2, Jugador, L), scoresjugadores(Js, Ls). 
+dobbleGamePlay([Jugadores, Numjugadores, Mazo, Area, Modo, _], finish, [Jugadores, Numjugadores, Mazo, Area, Modo, finalizado, R]):- scoresjugadores(Jugadores, R1), not(serepite(R1)), maxScore(R1, R2), ganador(Jugadores, R2, R3), primero(R3, R), !.
+scoresjugadores([Jugador|Js], [L|Ls]):- getElem(2, Jugador, L), scoresjugadores(Js, Ls).
+
+dobbleGamePlay([Jugadores, Numjugadores, Mazo, Area, Modo ,_], finish, [Jugadores, Numjugadores, Mazo, Area, Modo, finalizado, empate]):- scoresjugadores(Jugadores, R1), serepite(R1), !.
+
 maxScore(L, X):- mayor(L, X).
 ganador([L|_], Score, G):- mymember(Score, L, G), !.
 ganador([_|Ls], Score, G):- ganador(Ls, Score, G). 
-
-
-%manera de ocupar el play
-play(Game, null, G2):- play1(Game, null, G2),!.
-play(Game, ["spoit" , Jugador, Elemento], G2):- play2(Game, ["spoit", Jugador, Elemento], G2), !.
-play(Game, pass, G2):- play3(Game, pass, G2), !.
-play(Game, finish, G2):- play4(Game, finish, G2), !.
 
 %para el dobbleGameStatus
 dobbleGameStatus(Game, Estado):- getElem(6, Game, Estado).
@@ -197,7 +197,7 @@ Dominios:
     serepite: Saber si en una lista se repite un elemento
     encomun: Saber cuantos elementos en comun tienen 2 listas
     primero: se obtiene el primer elemento de una lista
-    yapo: Encargada de verificar que en un mazo de cartas, cada par de carta tenga en comun solo 1 objeto.
+    comparar3: Encargada de verificar que en un mazo de cartas, cada par de carta tenga en comun solo 1 objeto.
     getElem: Obtiene el elemento de la lista dado la poscicion 
     get2: Encargada de que a un numero se le asigna un elemento de una lista
     set: A partir de una lista donde se repiten elementos se obtiene otra lista donde no se repitan los elementos
@@ -219,7 +219,7 @@ Predicados:
     serepite(X, L). aridad 2
     encomun(L1, L2). aridad 2
     primero(L). aridad 1
-    yapo(Cartas). aridad 1
+    comparar3(Cartas). aridad 1
     getElem(X, L). aridad 2
     get2(L1, L2). aridad 2
     set(L). aridad 2
@@ -239,7 +239,7 @@ Predicados:
 %hechos:
 primero([L|_], L).
 
-yapo([], _):- !.
+comparar3([], _):- !.
 
 getElem(1,[C|_],C):-!.
 
@@ -272,8 +272,8 @@ serepite(L):- set(L, E), length(E, X), length(L, Y), X < Y.
 
 encomun(L1, L2):- intersection(L1,L2, X), length(X, 1).
 
-yapo([_|Ls], T):- length(T, 1), yapo(Ls, Ls), !.
-yapo([L1|Ls], [_|Xs]):- primero(Xs, E), encomun(L1, E), yapo([L1|Ls], Xs).
+comparar3([_|Ls], T):- length(T, 1), comparar3(Ls, Ls), !.
+comparar3([L1|Ls], [_|Xs]):- primero(Xs, E), encomun(L1, E), comparar3([L1|Ls], Xs).
 
 getElem(X,[_|R],Sol):-X1 is X -1,getElem(X1,R,Sol).
 
@@ -302,3 +302,55 @@ agregar(E, L1, [E|L1]).
 obtener2(X, [L|Ls], Resultado):- mymember(X, L, Resultado), !.
 obtener2(X, [_|Ls], Resultado):- obtener2(X, Ls, Resultado).
 
+/*
+--------------------------------------------------- EJEMPLOS DE USOS DE LOS PREDICADOS PRINCIPALES -----------------------------
+cardset([a,b,c,c,e,f,g,h,i,j,k], 3, MaxC, Cs1).
+cardset([a,b,c,d,e,f,g,h,i,j,k], 4, MaxC, Cs2).             retorna falso porque la lista de elementos no tiene los suficientes para crear todas las cartas.
+cardset([perro, gato, jirafa,raton, elefante, unicornio, dragon, araña, ciervo, huemul, pinnguino, leon, nutria], 4, 10, Cs3).       cardset con solo 10 cartas.
+cardset([a,b,c,d,e,f,g,h,i,j,k], 3, 5, Cs4).
+
+cardsSetIsDobble(Cs1).                  entregara falso, ya que en la lista de elemento se repite uno de ellos (c).
+cardsSetIsDobble(Cs2).                  verdadero.
+cardsSetIsDobble(Cs3).                  verdadero.
+
+cardsSetNthCard(Cs4, 1, C1).
+cardsSetNthCard(cS3, 13, C2).           falso ya que el cardset que se le entrega solo tiene 3 cartas
+cardsSetNthCard(cS3, 0, C3).
+cardsSetNthCard(cS3, MaxC, C4).
+
+cardsSetFindTotalCards(C3, CT1).
+cardsSetFindTotalCards(C1, CT2).
+cardsSetFindTotalCards(C4, CT3).
+
+cardsSetMissingCards(Cs3, Csrest).
+cardsSetMissingCards(Cs1, Csrest2).             falso ya que el mazo esta completo.
+cardsSetMissingCards(Cs4, Csrest3).
+
+cardsSetToString(Cs3, CTS).
+cardsSetToString(Cs1, CTS2).
+cardsSetToString(Cs4, CTS3).
+
+dobbleGame(3, Cs3, stackmode, G1).
+dobbleGame(2, Cs4, stackmode, G2).
+dobbleGame(5, Cs4, stackmode, G3).
+
+dobbleGameRegister(juan, G1, G1aux), dobbleGameRegister(tomas, G1aux, G2out).
+dobbleGameRegister(diego, G2, G2aux), dobbleGameRegister(juan, G2aux, G3aux), dobbleGameRegister(victor, G3aux, G4aux).         falso ya que el game original solo puede registar a 2 jugadores
+dobbleGameRegister(diego, G3, G3aux), dobbleGameRegister(juan, G3aux, G4aux), dobbleGameRegister(victor, G4aux, G5aux).
+
+dobbleGameWhoseTurnIsIt(G5aux, Jugador).
+dobbleGameWhoseTurnIsIt(G2out, Jugador).
+dobbleGameRegister(diego, G2, G2aux), dobbleGameRegister(juan, G2aux, G3aux), dobbleGameWhoseTurnIsIt(G3aux, Jugador).
+
+dobbleGamePlay(G2out, null, Game2).
+dobbleGamePlay(G2out, null, Game2), dobbleGamePlay(Game2, ["spoit", tomas, pinguino], Game3).
+dobbleGamePlay(G5aux, null, Game3), dobbleGamePlay(Game2, ["spoit", victor, pinguino], Game3), dobbleGamePlay(Game2, ["spoit", tomas, pinguino], Game3), dobbleGamePlay(Game3, finish, Game4).
+
+
+dobbleGameStatus(Game2, Status1).
+dobbleGameStatus(Game3, Status2).
+dobbleGameStatus(Game4, Status3).
+
+dobbleGameScore(Game2, tomas).
+dobbleGameScore(Game3, juan).
+dobbleGameScore(Game4, victor).
